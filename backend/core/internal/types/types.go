@@ -6,9 +6,24 @@ type CommonReply struct {
 	Data map[string]interface{} `json:"data"`
 }
 
+type FileUploadChunkCompleteRequest struct {
+	Key        string      `json:"key"`
+	UploadId   string      `json:"upload_id"`
+	CosObjects []CosObject `json:"cos_objects"`
+}
+
+type CosObject struct {
+	PartNumber int    `json:"part_number"`
+	Etag       string `json:"etag"`
+}
+
+type FileUploadChunkRequest struct {
+}
+
 type FileUploadPrepareRequest struct {
 	Md5  string `json:"md5"`
 	Name string `json:"name"`
+	Ext  string `json:"ext"`
 }
 
 type ShareBasicSaveRequest struct {

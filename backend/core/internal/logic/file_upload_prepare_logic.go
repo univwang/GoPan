@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"backend/core/helper"
 	"backend/core/models"
 	"context"
 
@@ -41,6 +42,15 @@ func (l *FileUploadPrepareLogic) FileUploadPrepare(req *types.FileUploadPrepareR
 		}
 	} else {
 		// 获取文件的upload_id，分片上传
+		key, uploadId, err := helper.CosInitPart(req.Ext)
+		if err != nil {
+			return nil, err
+		}
+		resp.Msg = "Get UploadId Success"
+		resp.Data = map[string]interface{}{
+			"key":       key,
+			"upload_id": uploadId,
+		}
 	}
 
 	return

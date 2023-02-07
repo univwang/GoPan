@@ -16,13 +16,13 @@ const chunkSize = 1 * 1024 * 1024 // 1MB
 
 func TestGenerateChunkFile(t *testing.T) {
 	//fileInfo, err := os.Stat("test.rar")
-	fileInfo, err := os.Stat("/img/test2.jpg")
+	fileInfo, err := os.Stat("./img/test1.jpg")
 	if err != nil {
 		t.Fatal(err)
 	}
 	// 分片个数
 	chunkNum := math.Ceil(float64(fileInfo.Size()) / float64(chunkSize))
-	file, err := os.OpenFile("test.rar", os.O_RDONLY, 0666)
+	file, err := os.OpenFile("./img/test1.jpg", os.O_RDONLY, 0666)
 	if err != nil {
 		t.Fatal(err)
 	}

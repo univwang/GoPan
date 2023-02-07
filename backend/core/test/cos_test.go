@@ -4,6 +4,7 @@ import (
 	"backend/core/define"
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/tencentyun/cos-go-sdk-v5"
 	"log"
 	"net/http"
@@ -14,18 +15,15 @@ import (
 
 func Test_cos(t *testing.T) {
 
-	// 存储桶名称，由bucketname-appid 组成，appid必须填入，可以在COS控制台查看存储桶名称。https://console.tencentcloud.com/cos5/bucket
-	// COS_REGION 可以在控制台查看，https://console.tencentcloud.com/cos5/bucket, 关于地域的详情见 https://www.tencentcloud.com/document/product/436/6224?from_cn_redirect=1
 	u, _ := url.Parse("https://cloud-1307889700.cos.ap-nanjing.myqcloud.com")
 	b := &cos.BaseURL{BucketURL: u}
 	c := cos.NewClient(b, &http.Client{
 		Transport: &cos.AuthorizationTransport{
-			SecretID:  define.TencentSecretID,  // 替换为用户的 SecretId，请登录访问管理控制台进行查看和管理，https://console.tencentcloud.com/cam/capi
-			SecretKey: define.TencentSecretKey, // 替换为用户的 SecretKey，请登录访问管理控制台进行查看和管理，https://console.tencentcloud.com/cam/capi
+			SecretID:  define.TencentSecretID,
+			SecretKey: define.TencentSecretKey,
 		},
 	})
 	// 对象键（Key）是对象在存储桶中的唯一标识。
-	// 例如，在对象的访问域名 `examplebucket-1250000000.cos.COS_REGION.myqcloud.com/test/objectPut.go` 中，对象键为 test/objectPut.go
 	key := "cloud-disk/test.jpg"
 	_, _, err := c.Object.Upload(context.Background(), key, "./img/test2.jpg", nil)
 
@@ -36,18 +34,14 @@ func Test_cos(t *testing.T) {
 }
 
 func TestFileUploadByPut(t *testing.T) {
-	// 存储桶名称，由bucketname-appid 组成，appid必须填入，可以在COS控制台查看存储桶名称。https://console.tencentcloud.com/cos5/bucket
-	// COS_REGION 可以在控制台查看，https://console.tencentcloud.com/cos5/bucket, 关于地域的详情见 https://www.tencentcloud.com/document/product/436/6224?from_cn_redirect=1
 	u, _ := url.Parse("https://cloud-1307889700.cos.ap-nanjing.myqcloud.com")
 	b := &cos.BaseURL{BucketURL: u}
 	c := cos.NewClient(b, &http.Client{
 		Transport: &cos.AuthorizationTransport{
-			SecretID:  define.TencentSecretID,  // 替换为用户的 SecretId，请登录访问管理控制台进行查看和管理，https://console.tencentcloud.com/cam/capi
-			SecretKey: define.TencentSecretKey, // 替换为用户的 SecretKey，请登录访问管理控制台进行查看和管理，https://console.tencentcloud.com/cam/capi
+			SecretID:  define.TencentSecretID,
+			SecretKey: define.TencentSecretKey,
 		},
 	})
-	// 对象键（Key）是对象在存储桶中的唯一标识。
-	// 例如，在对象的访问域名 `examplebucket-1250000000.cos.COS_REGION.myqcloud.com/test/objectPut.go` 中，对象键为 test/objectPut.go
 	key := "cloud-disk/test2.jpg"
 
 	file, err := os.ReadFile("./img/test2.jpg")
@@ -59,5 +53,88 @@ func TestFileUploadByPut(t *testing.T) {
 	_, err = c.Object.Put(context.Background(), key, bytes.NewReader(file), nil)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+// 分片上传初始化
+func TestInitPartUpload(t *testing.T) {
+	u, _ := url.Parse("https://cloud-1307889700.cos.ap-nanjing.myqcloud.com")
+	b := &cos.BaseURL{BucketURL: u}
+	c := cos.NewClient(b, &http.Client{
+		Transport: &cos.AuthorizationTransport{
+			SecretID:  define.TencentSecretID,
+			SecretKey: define.TencentSecretKey,
+		},
+	})
+
+	key := "cloud-disk/example2.jpg"
+	v, _, err := c.Object.InitiateMultipartUpload(context.Background(), key, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	UploadID := v.UploadID
+	fmt.Println(UploadID)
+	// 1675755492a246050a07f7ca17d909cfb9b62ee61d6fef4afc4ff205cb68dbc39c6b92551d
+}
+
+// 分片上传
+
+func TestPartUpload(t *testing.T) {
+
+	u, _ := url.Parse("https://cloud-1307889700.cos.ap-nanjing.myqcloud.com")
+	b := &cos.BaseURL{BucketURL: u}
+	c := cos.NewClient(b, &http.Client{
+		Transport: &cos.AuthorizationTransport{
+			SecretID:  define.TencentSecretID,
+			SecretKey: define.TencentSecretKey,
+		},
+	})
+
+	key := "cloud-disk/example2.jpg"
+
+	UploadID := "1675755492a246050a07f7ca17d909cfb9b62ee61d6fef4afc4ff205cb68dbc39c6b92551d"
+
+	//f, err := os.ReadFile("0.chunk") //ca4d4d7856d8f86fc75d7d9740c9194a
+	//f, err := os.ReadFile("1.chunk") // 87bcb2aea4cd7ff7e8c91f8cfba84288
+	f, err := os.ReadFile("2.chunk") // de83d254c96ffb11bef3b70f61f4099e
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := c.Object.UploadPart(
+		context.Background(), key, UploadID, 3, bytes.NewReader(f), nil,
+	)
+	if err != nil {
+		panic(err)
+	}
+	PartETag := resp.Header.Get("ETag") // md5(0.chunk)
+	fmt.Println(PartETag)
+}
+
+// 分片上传完成
+func TestPartUploadComplete(t *testing.T) {
+	u, _ := url.Parse("https://cloud-1307889700.cos.ap-nanjing.myqcloud.com")
+	b := &cos.BaseURL{BucketURL: u}
+	c := cos.NewClient(b, &http.Client{
+		Transport: &cos.AuthorizationTransport{
+			SecretID:  define.TencentSecretID,
+			SecretKey: define.TencentSecretKey,
+		},
+	})
+
+	key := "cloud-disk/example2.jpg"
+	UploadID := "1675755492a246050a07f7ca17d909cfb9b62ee61d6fef4afc4ff205cb68dbc39c6b92551d"
+	//md5 := "ca4d4d7856d8f86fc75d7d9740c9194a"
+
+	opt := &cos.CompleteMultipartUploadOptions{}
+	opt.Parts = append(opt.Parts, cos.Object{
+		PartNumber: 1, ETag: "ca4d4d7856d8f86fc75d7d9740c9194a"}, cos.Object{
+		PartNumber: 2, ETag: "87bcb2aea4cd7ff7e8c91f8cfba84288"}, cos.Object{
+		PartNumber: 3, ETag: "de83d254c96ffb11bef3b70f61f4099e"},
+	)
+	_, _, err := c.Object.CompleteMultipartUpload(
+		context.Background(), key, UploadID, opt,
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
