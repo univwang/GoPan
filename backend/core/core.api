@@ -1,0 +1,152 @@
+service core-api {
+	
+	//用户登录
+	@handler UserLogin
+	post /user/login(LoginRequest) returns (CommonReply)
+	
+	// 用户详情
+	@handler UserDetail
+	get /user/detail(UserDetailsRequest) returns (CommonReply)
+	
+	// 获取文件资源详情
+	// return name; ext; size; path; repository_identity;
+	@handler ShareBasicDetail
+	get /share/basic/detail(ShareBasicDetailRequest) returns (CommonReply)
+}
+
+@server (
+	middleware: Auth
+)
+service core-api {
+	// 文件上传
+	@handler FileUpload
+	post /file/upload(FileUploadRequest) returns (CommonReply)
+	
+	// 用户文件的关联存储
+	@handler UserRepositorySave
+	post /user/repository/save(UserRepositorySaveRequest) returns (CommonReply)
+	
+	// 用户文件列表
+	@handler UserFileList
+	get /user/file/list(UserFileListRequest) returns (CommonReply)
+	
+	// 用户文件名称修改
+	@handler UserFileNameUpdate
+	post /user/file/name_update(UserFileNameUpdateRequest) returns (CommonReply)
+	
+	// 用户文件夹创建
+	@handler UserFolderCreate
+	post /user/folder/create(UserFolderCreateRequest) returns (CommonReply)
+	
+	// 用户文件删除
+	@handler UserFileDelete
+	post /user/file/delete(UserFileDeleteRequest) returns (CommonReply)
+	
+	// 用户文件移动
+	@handler UserFileMove
+	post /user/file/move(UserFileMoveRequest) returns (CommonReply)
+	
+	// 创建分享记录
+	@handler ShareBasicCreate
+	post /share/basic/create(ShareBasicCreateRequest) returns (CommonReply)
+	
+	// 资源保存
+	// return identity;
+	@handler ShareBasicSave
+	post /share/basic/save(ShareBasicSaveRequest) returns (CommonReply)
+	
+	// 文件上传前基本信息处理
+	// return identity;  upload_id;
+	@handler FileUploadPrepare
+	post /file/upload_prepare(FileUploadPrepareRequest) returns (CommonReply)
+}
+
+type CommonReply {
+	Msg  string                 `json:"msg"`
+	Data map[string]interface{} `json:"data"`
+}
+
+type FileUploadPrepareRequest {
+	Md5  string `json:"md5"`
+	Name string `json:"name"`
+}
+
+type ShareBasicSaveRequest {
+	RepositoryIdentity string `json:"repository_identity"`
+	ParentId           int64  `json:"parent_id"`
+}
+
+type ShareBasicCreateReply {
+	RepositoryIdentity string `json:"repository_identity"`
+	Name               string `json:"name"`
+	Ext                string `json:"ext"`
+	Size               string `json:"size"`
+	Path               string `json:"path"`
+}
+
+type ShareBasicDetailRequest {
+	Identity string `json:"identity"`
+}
+
+type ShareBasicCreateRequest {
+	RepositoryIdentity string `json:"repository_identity"`
+	ExpiredTime        int    `json:"expired_time"`
+}
+
+type UserFileMoveRequest {
+	Identity       string `json:"identity"`
+	ParentIdentity string `json:"parent_identity"`
+}
+type UserFileDeleteRequest {
+	Identity string `json:"identity"`
+}
+
+type UserFolderCreateRequest {
+	ParentId int64  `json:"parent_id"`
+	Name     string `json:"name"`
+}
+
+type UserFileNameUpdateRequest {
+	Identity string `json:"identity"`
+	Name     string `json:"name"`
+}
+
+type UserFileListRequest {
+	Id   int64 `json:"id, optional"`
+	Page int   `json:"page, optional"`
+	Size int   `json:"size, optional"`
+}
+
+type UserFile {
+	Id                 int64  `json:"id"`
+	Identity           string `json:"identity"`
+	RepositoryIdentity string `json:"repository_identity"`
+	Name               string `json:"name"`
+	Ext                string `json:"ext"`
+	Path               string `json:"path"`
+	Size               int64  `json:"size"`
+}
+
+type UserRepositorySaveRequest {
+	ParentId           int64  `json:"parent_id"`
+	RepositoryIdentity string `json:"repository_identity"`
+	Ext                string `json:"ext"`
+	Name               string `json:"name"`
+}
+
+type FileUploadRequest {
+	Hash string `json:"hash, optional"`
+	Name string `json:"name, optional"`
+	Ext  string `json:"ext, optional"`
+	Size int64  `json:"size, optional"`
+	Path string `json:"path, optional"`
+}
+
+type LoginRequest {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+type UserDetailsRequest {
+	Identity string `json:"identity"`
+}
