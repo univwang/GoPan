@@ -1,6 +1,6 @@
 <template>
-  <Nav-bar></Nav-bar>
-  <router-view/>
+  <NavBar/>
+  <router-view></router-view>
 </template>
 
 <script>
@@ -20,6 +20,6 @@ export default {
 <style>
 body {
   /* background-image: url("@/assets/img/background.jfif"); */
-  background-size: cover;
+  /* background-size: cover; */
 }
 </style>
